@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "discogs_mcp"
+version = "0.1.0"
+description = "A model context protocol (MCP) for interacting with Discogs"
+readme = "README.md"
+authors = [
+    {name = "Vitalii V", email = "myrdhin.yates@gmail.com"},
+]
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp>=2.7.1",
+    "discogs-client",
+    "cachetools",
+    "python-dotenv",
+]
+
+[dependency-groups]
+dev = [
+  "pytest",
+  "black",
+  "pytest-asyncio>=1.2.0",
+  "ruff",
+  "pre-commit",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/blghtr/discogs_mcp"
+"Bug Tracker" = "https://github.com/blghtr/discogs_mcp/issues"
+
+[project.scripts]
+discogs_mcp = "discogs_mcp.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/discogs_mcp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]  # Line too long, handled by black
