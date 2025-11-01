@@ -40,6 +40,38 @@ api_client = DiscogsAPIClient()
 mcp = FastMCP("Discogs MCP Server")
 
 
+def _extract_format_names(formats: list | None) -> str | None:
+    """
+    Extract format names from release formats.
+
+    Handles both object and dict formats from Discogs API.
+
+    Args:
+        formats: List of format objects or dicts
+
+    Returns:
+        Comma-separated string of format names or None
+    """
+    if not formats:
+        return None
+
+    format_names = []
+    for f in formats:
+        if isinstance(f, dict):
+            # Handle dict format (e.g., {"name": "Vinyl", "qty": "1"})
+            name = f.get("name") or f.get("format_name")
+            if name:
+                format_names.append(name)
+        elif hasattr(f, "name"):
+            # Handle object format
+            format_names.append(f.name)
+        elif isinstance(f, str):
+            # Handle string format
+            format_names.append(f)
+
+    return ", ".join(format_names) if format_names else None
+
+
 # LLM:METADATA
 # :hierarchy: [DiscogsMCP | SearchTool]
 # :relates-to:
@@ -135,11 +167,7 @@ async def search_releases(
                     else None
                 ),
                 "year": release.year,
-                "format": (
-                    ", ".join([f.name for f in release.formats])
-                    if release.formats
-                    else None
-                ),
+                "format": _extract_format_names(release.formats),
                 "label": (
                     ", ".join([label.name for label in release.labels])
                     if release.labels
@@ -272,11 +300,7 @@ async def get_release_details(ctx: Context, release_id: int) -> dict[str, Any] |
                 else None
             ),
             "year": release.year,
-            "format": (
-                ", ".join([f.name for f in release.formats])
-                if release.formats
-                else None
-            ),
+            "format": _extract_format_names(release.formats),
             "label": (
                 ", ".join([label.name for label in release.labels])
                 if release.labels
