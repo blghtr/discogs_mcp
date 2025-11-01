@@ -50,3 +50,4 @@ venv.bak/
 .temp/
 
 .*cache
+.cursor/
