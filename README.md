@@ -19,18 +19,20 @@ Create a `.env` file in the project root (optional but recommended):
 cp .env.example .env
 ```
 
-Edit `.env` and add your Discogs token:
+Edit `.env` and add your Discogs Consumer Key & Secret:
 
 ```env
-DISCOGS_USER_TOKEN=your_token_here
+DISCOGS_CONSUMER_KEY=your_consumer_key_here
+DISCOGS_CONSUMER_SECRET=your_consumer_secret_here
 ```
 
-**Getting your Discogs token:**
+**Getting your Discogs Consumer Key & Secret:**
 1. Go to https://www.discogs.com/settings/developers
-2. Generate a personal access token
-3. Add it to your `.env` file
+2. Create a new application (or use existing one)
+3. Copy the Consumer Key and Consumer Secret
+4. Add both to your `.env` file
 
-**Note:** The token is optional but recommended. Without it, you get 25 requests/minute. With authentication, you get 60 requests/minute.
+**Note:** Consumer Key & Secret are optional but recommended. Without them, you get 25 requests/minute. With authentication, you get 60 requests/minute.
 
 ## Usage
 
@@ -60,7 +62,7 @@ uv sync --dev
 
 # Set up environment (create .env file)
 cp .env.example .env
-# Edit .env and add your Discogs token
+# Edit .env and add your Discogs Consumer Key & Secret
 
 # Install pre-commit hooks (optional but recommended)
 uv run pre-commit install

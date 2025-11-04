@@ -16,7 +16,7 @@ from cachetools import cached
 from discogs_client.exceptions import DiscogsAPIError, HTTPError
 
 from discogs_mcp.cache import api_cache
-from discogs_mcp.config import get_discogs_token, get_user_agent
+from discogs_mcp.config import get_discogs_credentials, get_user_agent
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +35,11 @@ logger = logging.getLogger(__name__)
 #      "get_release_details: async release detail retrieval with caching, handles 404 errors"
 #  ]
 # :contract:
-#  - pre: "Discogs client initialized with User-Agent, token may be None for anonymous mode"
+#  - pre: "Discogs client initialized with User-Agent, Consumer Key & Secret may be None for anonymous mode"
 #  - post: "Async methods return Release objects or raise exceptions, sync methods return objects suitable for caching"
 #  - invariant: "Non-blocking event loop, deterministic results for same inputs, respects Discogs rate limits (60 req/min with auth, 25 without)"
 # :complexity: 7
-# :decision_cache: "asyncio.to_thread over httpx rewrite: preserves discogs_client functionality including built-in rate limiting and error handling, simpler than maintaining custom HTTP client [decision-async-wrapper-001]"
+# :decision_cache: "asyncio.to_thread over httpx rewrite: preserves discogs_client functionality including built-in rate limiting and error handling, simpler than maintaining custom HTTP client [decision-async-wrapper-001]; Consumer Key & Secret over user token: simpler OAuth app credentials, same rate limits (60 req/min), no need for personal access token generation [decision-auth-003]"
 # LLM:END
 
 
@@ -53,17 +53,21 @@ class DiscogsAPIClient:
 
     def __init__(self) -> None:
         """
-        Initialize Discogs API client with User-Agent and optional token.
+        Initialize Discogs API client with User-Agent and optional Consumer Key & Secret.
 
         Creates discogs_client instance with configured User-Agent.
-        Token is optional for anonymous access (lower rate limits).
+        Consumer Key & Secret are optional for anonymous access (lower rate limits).
         """
         user_agent = get_user_agent()
-        token = get_discogs_token()
+        consumer_key, consumer_secret = get_discogs_credentials()
 
-        if token:
-            self.client = discogs_client.Client(user_agent, user_token=token)
-            logger.info("Discogs client initialized with authentication (60 req/min)")
+        if consumer_key and consumer_secret:
+            self.client = discogs_client.Client(
+                user_agent,
+                consumer_key=consumer_key,
+                consumer_secret=consumer_secret,
+            )
+            logger.info("Discogs client initialized with Consumer Key & Secret (60 req/min)")
         else:
             self.client = discogs_client.Client(user_agent)
             logger.info("Discogs client initialized anonymously (25 req/min)")
