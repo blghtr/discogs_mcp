@@ -3,39 +3,29 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "discogs_mcp"
+name = "plastinka-discogs-agent"
 version = "0.1.0"
-description = "A model context protocol (MCP) for interacting with Discogs"
+description = "AI agent for vinyl record recognition using CrewAI and Discogs MCP"
 readme = "README.md"
-authors = [
-    {name = "Vitalii V", email = "myrdhin.yates@gmail.com"},
-]
 requires-python = ">=3.11"
 dependencies = [
-    "fastmcp>=2.7.1",
-    "discogs-client",
-    "cachetools",
-    "python-dotenv",
+    "crewai>=0.28.0",
+    "crewai-tools[mcp]>=0.2.0",
+    "litellm>=1.30.0",
+    "mcp>=0.9.0",
+    "python-dotenv>=1.0.0",
+    "pillow>=10.0.0",
 ]
 
 [dependency-groups]
 dev = [
-  "pytest",
-  "black",
-  "pytest-asyncio>=1.2.0",
-  "ruff",
-  "pre-commit",
+  "pytest>=7.4.0",
+  "black>=23.0.0",
+  "ruff>=0.1.0",
 ]
 
-[project.urls]
-"Homepage" = "https://github.com/blghtr/discogs_mcp"
-"Bug Tracker" = "https://github.com/blghtr/discogs_mcp/issues"
-
-[project.scripts]
-discogs_mcp = "discogs_mcp.main:main"
-
 [tool.hatch.build.targets.wheel]
-packages = ["src/discogs_mcp"]
+packages = ["src/plastinka"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -46,4 +36,4 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
-ignore = ["E501"]  # Line too long, handled by black
+ignore = ["E501"]
