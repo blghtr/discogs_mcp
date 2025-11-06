@@ -19,20 +19,35 @@ Create a `.env` file in the project root (optional but recommended):
 cp .env.example .env
 ```
 
-Edit `.env` and add your Discogs Consumer Key & Secret:
+Edit `.env` and add your Discogs credentials:
 
 ```env
 DISCOGS_CONSUMER_KEY=your_consumer_key_here
 DISCOGS_CONSUMER_SECRET=your_consumer_secret_here
+DISCOGS_USER_TOKEN=your_personal_access_token_here
 ```
 
-**Getting your Discogs Consumer Key & Secret:**
-1. Go to https://www.discogs.com/settings/developers
-2. Create a new application (or use existing one)
-3. Copy the Consumer Key and Consumer Secret
-4. Add both to your `.env` file
+**Getting your Discogs credentials:**
 
-**Note:** Consumer Key & Secret are optional but recommended. Without them, you get 25 requests/minute. With authentication, you get 60 requests/minute.
+1. **Consumer Key & Secret** (optional but recommended):
+   - Go to https://www.discogs.com/settings/developers
+   - Create a new application (or use existing one)
+   - Copy the Consumer Key and Consumer Secret
+   - These provide access to image URLs and increase rate limit to 60 req/min
+
+2. **Personal Access Token** (required for authenticated requests):
+   - Go to https://www.discogs.com/settings/developers
+   - Click "Generate new token"
+   - Copy the generated token
+   - This is required for API search and retrieval operations (prevents 401 errors)
+
+**Note:** 
+- **Personal Access Token** (`DISCOGS_USER_TOKEN`) is **REQUIRED** for all API operations (including search)
+- **Consumer Key & Secret** are optional but recommended - they provide:
+  - Access to image URLs (when used with user_token)
+  - Increased rate limit (60 req/min vs 25 req/min)
+- Without `user_token`, you will get 401 authentication errors
+- Without any credentials, you get 25 requests/minute with limited functionality
 
 ## Usage
 

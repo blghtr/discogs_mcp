@@ -16,7 +16,7 @@ from cachetools import cached
 from discogs_client.exceptions import DiscogsAPIError, HTTPError
 
 from discogs_mcp.cache import api_cache
-from discogs_mcp.config import get_discogs_credentials, get_user_agent
+from discogs_mcp.config import get_discogs_credentials, get_discogs_user_token, get_user_agent
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 #  - post: "Async methods return Release objects or raise exceptions, sync methods return objects suitable for caching"
 #  - invariant: "Non-blocking event loop, deterministic results for same inputs, respects Discogs rate limits (60 req/min with auth, 25 without)"
 # :complexity: 7
-# :decision_cache: "asyncio.to_thread over httpx rewrite: preserves discogs_client functionality including built-in rate limiting and error handling, simpler than maintaining custom HTTP client [decision-async-wrapper-001]; Consumer Key & Secret over user token: simpler OAuth app credentials, same rate limits (60 req/min), no need for personal access token generation [decision-auth-003]"
+# :decision_cache: "asyncio.to_thread over httpx rewrite: preserves discogs_client functionality including built-in rate limiting and error handling, simpler than maintaining custom HTTP client [decision-async-wrapper-001]; user_token only (no Consumer Key/Secret when user_token present): user_token triggers UserTokenRequestsFetcher which works correctly, Consumer Key/Secret triggers OAuth2Fetcher which causes 401 errors even with user_token [decision-auth-005]"
 # LLM:END
 
 
@@ -60,17 +60,31 @@ class DiscogsAPIClient:
         """
         user_agent = get_user_agent()
         consumer_key, consumer_secret = get_discogs_credentials()
+        user_token = get_discogs_user_token()
 
-        if consumer_key and consumer_secret:
+        if user_token:
+            # Personal access token works independently - don't pass Consumer Key & Secret
+            # to avoid triggering OAuth2Fetcher which causes 401 errors
+            self.client = discogs_client.Client(
+                user_agent,
+                user_token=user_token,
+            )
+            logger.info("Discogs client initialized with user_token (full authenticated access)")
+        elif consumer_key and consumer_secret:
+            # Consumer Key & Secret alone are NOT sufficient - Discogs API requires user_token
+            # for all operations (including search). This will cause 401 errors.
             self.client = discogs_client.Client(
                 user_agent,
                 consumer_key=consumer_key,
                 consumer_secret=consumer_secret,
             )
-            logger.info("Discogs client initialized with Consumer Key & Secret (60 req/min)")
+            logger.warning(
+                "Discogs client initialized with Consumer Key & Secret only - "
+                "this will cause 401 errors. user_token is required for all operations."
+            )
         else:
             self.client = discogs_client.Client(user_agent)
-            logger.info("Discogs client initialized anonymously (25 req/min)")
+            logger.info("Discogs client initialized anonymously (25 req/min, limited functionality)")
 
     def _create_search_cache_key(self, **kwargs: Any) -> str:
         """

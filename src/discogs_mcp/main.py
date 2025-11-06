@@ -394,7 +394,7 @@ async def get_release_details(ctx: Context, release_id: int) -> dict[str, Any] |
 def main() -> None:
     """Main entry point for the application."""
     logger.info("Starting Discogs MCP Server")
-    mcp.run(transport="stdio")
+    mcp.run(transport="streamable-http")
 
 
 if __name__ == "__main__":
